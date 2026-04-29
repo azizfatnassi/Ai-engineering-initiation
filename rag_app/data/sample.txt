@@ -1,0 +1,8 @@
+Artificial Intelligence is the simulation of human intelligence by machines.
+Machine Learning is a subset of AI that allows systems to learn from data.
+Deep Learning uses neural networks with many layers to solve complex problems.
+RAG stands for Retrieval Augmented Generation. It combines search with LLMs.
+Ollama allows you to run large language models locally on your own machine.
+FastAPI is a modern Python web framework for building APIs quickly.
+ChromaDB is a vector database used to store and search embeddings.
+Mistral is an open-source LLM that can run locally via Ollama.
