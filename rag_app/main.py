@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from app.rag import ask,ask_stream, load_llm, load_vectorstore
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
-
+from fastapi.middleware.cors import CORSMiddleware
 from app.ingest import ingest_documents
 
 

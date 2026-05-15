@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RAG Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+    h1 { color: #333; }
+
+    /* Upload section */
+    #upload-section { background: white; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; border: 1px solid #ddd; display: flex; align-items: center; gap: 10px; }
+    #upload-section input[type="file"] { flex: 1; }
+    #upload-btn { padding: 8px 18px; background: #34a853; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; }
+    #upload-btn:disabled { background: #aaa; }
+    #upload-status { font-size: 0.85em; color: #555; margin-top: 6px; }
+
+    /* Chat */
+    #chat-box { background: white; border-radius: 8px; padding: 20px; min-height: 300px; margin-bottom: 20px; border: 1px solid #ddd; }
+    .message { margin-bottom: 16px; line-height: 1.6; }
+    .user { color: #1a73e8; font-weight: bold; }
+    .assistant { color: #333; font-weight: bold; }
+    .sources { font-size: 0.85em; color: #666; background: #f9f9f9; padding: 8px; border-left: 3px solid #ccc; margin-top: 8px; }
+    #input-area { display: flex; gap: 10px; }
+    #question { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em; }
+    #send-btn { padding: 10px 20px; background: #1a73e8; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
+    #send-btn:disabled { background: #aaa; }
+  </style>
+</head>
+<body>
+  <h1>📄 RAG Assistant</h1>
+
+  <!-- Upload Section -->
+  <div id="upload-section">
+    <input type="file" id="file-input" accept=".pdf,.txt" />
+    <button id="upload-btn" onclick="uploadFile()">Upload & Index</button>
+  </div>
+  <div id="upload-status"></div>
+
+  <!-- Chat Section -->
+  <div id="chat-box"></div>
+  <div id="input-area">
+    <input type="text" id="question" placeholder="Ask a question about your documents..." />
+    <button id="send-btn" onclick="sendQuestion()">Ask</button>
+  </div>
+
+  <script>
+    // ─── UPLOAD ───────────────────────────────────────────────
+    async function uploadFile() {
+      const fileInput = document.getElementById("file-input");
+      const uploadBtn = document.getElementById("upload-btn");
+      const uploadStatus = document.getElementById("upload-status");
+
+      if (!fileInput.files[0]) {
+        uploadStatus.textContent = "Please select a file first.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = "Indexing...";
+      uploadStatus.textContent = "Uploading and indexing — this may take a minute...";
+
+      try {
+        const response = await fetch("/upload", {
+          method: "POST",
+          body: formData   // NOTE: no Content-Type header — browser sets it automatically for FormData
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          uploadStatus.textContent = "❌ Error: " + data.error;
+        } else {
+          uploadStatus.textContent = "✅ " + data.message;
+          fileInput.value = "";
+        }
+
+      } catch (err) {
+        uploadStatus.textContent = "❌ Upload failed: " + err.message;
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = "Upload & Index";
+      }
+    }
+
+    // ─── STREAMING CHAT ───────────────────────────────────────
+    async function sendQuestion() {
+      const input = document.getElementById("question");
+      const btn = document.getElementById("send-btn");
+      const chatBox = document.getElementById("chat-box");
+      const question = input.value.trim();
+
+      if (!question) return;
+
+      // Show user message
+      chatBox.innerHTML += `<div class="message"><span class="user">You:</span> ${question}</div>`;
+      input.value = "";
+      btn.disabled = true;
+      btn.textContent = "Thinking...";
+
+      // Create the answer div now — we'll stream text into it
+      const answerDiv = document.createElement("div");
+      answerDiv.className = "message";
+      answerDiv.innerHTML = `<span class="assistant">Assistant:</span> <span class="answer-text"></span>`;
+      chatBox.appendChild(answerDiv);
+      const answerSpan = answerDiv.querySelector(".answer-text");
+
+      try {
+        const response = await fetch("/ask-stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+
+        // Read the stream token by token
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          answerSpan.textContent += decoder.decode(value);
+          chatBox.scrollTop = chatBox.scrollHeight;  // auto-scroll as text arrives
+        }
+
+      } catch (err) {
+        answerSpan.textContent = "Error: " + err.message;
+        answerSpan.style.color = "red";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Ask";
+      }
+    }
+
+    // Allow Enter key to submit
+    document.getElementById("question").addEventListener("keydown", e => {
+      if (e.key === "Enter") sendQuestion();
+    });
+  </script>
+</body>
+</html>

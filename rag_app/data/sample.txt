@@ -1,8 +1,19 @@
-Artificial Intelligence is the simulation of human intelligence by machines.
-Machine Learning is a subset of AI that allows systems to learn from data.
-Deep Learning uses neural networks with many layers to solve complex problems.
-RAG stands for Retrieval Augmented Generation. It combines search with LLMs.
-Ollama allows you to run large language models locally on your own machine.
-FastAPI is a modern Python web framework for building APIs quickly.
-ChromaDB is a vector database used to store and search embeddings.
-Mistral is an open-source LLM that can run locally via Ollama.
+Artificial Intelligence (AI) is a branch of computer science that aims to create systems capable of performing tasks that normally require human intelligence. These tasks include visual perception, speech recognition, decision-making, and language translation.
+
+Machine Learning (ML) is a subset of AI that enables systems to learn and improve from experience without being explicitly programmed. Machine learning focuses on developing algorithms that can access data and use it to learn for themselves.
+
+Deep Learning is a subfield of machine learning that uses neural networks with many layers to analyze various factors of data. Deep learning is particularly useful for processing unstructured data such as images, audio, and text.
+
+Natural Language Processing (NLP) is a branch of AI that helps computers understand, interpret, and manipulate human language. NLP draws from many disciplines, including computer science and computational linguistics.
+
+A Large Language Model (LLM) is a type of AI model trained on massive amounts of text data. LLMs can generate coherent text, answer questions, summarize documents, and perform many other language tasks. Examples include GPT-4, Mistral, and LLaMA.
+
+Retrieval Augmented Generation (RAG) is a technique that combines information retrieval with text generation. Instead of relying solely on what the model learned during training, RAG retrieves relevant documents from a knowledge base and uses them as context when generating answers. This makes the system more accurate and up to date.
+
+Vector databases store data as high-dimensional vectors, which are mathematical representations of meaning. When you search a vector database, it finds entries that are semantically similar to your query, even if the exact words are different. Popular vector databases include Chroma, Pinecone, and Weaviate.
+
+Fine-tuning is the process of taking a pre-trained model and training it further on a specific dataset to adapt it to a particular task or domain. Fine-tuning requires much less data and compute than training a model from scratch.
+
+Embeddings are numerical representations of text in a high-dimensional vector space. Words or sentences with similar meanings have embeddings that are close together in this space. Embedding models convert raw text into these vectors, enabling semantic search and similarity comparisons.
+
+Prompt engineering is the practice of designing and refining the input given to an LLM to get better outputs. A well-crafted prompt can significantly improve the quality, accuracy, and relevance of the model's response.
