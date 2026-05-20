@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Code Search</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+
+    body { background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 40px 20px; }
+
+    .container { max-width: 800px; margin: 0 auto; }
+
+    h1 { font-size: 2rem; color: #818cf8; margin-bottom: 8px; }
+    p.subtitle { color: #64748b; margin-bottom: 32px; }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    input {
+      flex: 1;
+      padding: 12px 16px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 1rem;
+    }
+
+    input:focus { outline: none; border-color: #818cf8; }
+
+    button {
+      padding: 12px 24px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:hover:not(:disabled) { background: #4338ca; }
+
+    .results { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .function-name { font-size: 1.1rem; color: #818cf8; font-weight: 600; }
+
+    .score {
+      background: #312e81;
+      color: #a5b4fc;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .meta { font-size: 0.85rem; color: #64748b; margin-bottom: 12px; }
+
+    pre {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #94a3b8;
+    }
+
+    .empty { text-align: center; color: #475569; padding: 40px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Code Search</h1>
+    <p class="subtitle">Search your codebase by meaning, not keywords</p>
+
+    <div class="search-row">
+      <input
+        id="queryInput"
+        type="text"
+        placeholder="e.g. handle file upload, stream tokens, search documents..."
+        onkeydown="if(event.key==='Enter') search()"
+      />
+      <button id="searchBtn" onclick="search()">Search</button>
+    </div>
+
+    <div id="results" class="results">
+      <p class="empty">Type a query and hit Search</p>
+    </div>
+  </div>
+
+  <script>
+    async function search() {
+      const query = document.getElementById('queryInput').value.trim();
+      if (!query) return;
+
+      const btn = document.getElementById('searchBtn');
+      const resultsDiv = document.getElementById('results');
+
+      btn.disabled = true;
+      btn.textContent = 'Searching...';
+      resultsDiv.innerHTML = '<p class="empty">Searching...</p>';
+
+      try {
+        const response = await fetch('http://localhost:8000/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, n_results: 5 })
+        });
+
+        const results = await response.json();
+
+        if (!results.length) {
+          resultsDiv.innerHTML = '<p class="empty">No results found</p>';
+          return;
+        }
+
+        resultsDiv.innerHTML = results.map(r => `
+          <div class="card">
+            <div class="card-header">
+              <span class="function-name">⚡ ${r.function_name}</span>
+              <span class="score">score: ${r.score}</span>
+            </div>
+            <div class="meta">📁 ${r.file_path} &nbsp;·&nbsp; line ${r.line_number}</div>
+            <pre>${escapeHtml(r.code)}</pre>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        resultsDiv.innerHTML = '<p class="empty">❌ Could not reach the API. Is the backend running?</p>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Search';
+      }
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+  </script>
+</body>
+</html>
